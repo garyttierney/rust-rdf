@@ -1,6 +1,5 @@
-use std::clone::Clone;
 use std::cmp::Ordering;
-use std::fmt::{self, Debug, Display};
+use std::fmt::{self, Display};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd)]
 pub enum IndexKeyType {

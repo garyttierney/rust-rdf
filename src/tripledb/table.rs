@@ -1,21 +1,14 @@
 extern crate rocksdb;
 extern crate byteorder;
 
-use std::borrow::Borrow;
-use std::borrow::BorrowMut;
 use std::cmp::Ordering;
 use std::marker::PhantomData;
-use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::RwLock;
-use std::error::Error;
 use std::vec::Vec;
 
-use tripledb::IndexKey;
-
 use self::byteorder::ByteOrder;
-use self::rocksdb::{DB, WriteBatch, Options, ColumnFamily, ColumnFamilyDescriptor, IteratorMode,
-                    Direction};
+use self::rocksdb::{DB, WriteBatch, Options, ColumnFamily, ColumnFamilyDescriptor};
 
 pub trait TableValue: Ord {
     /// Encode this table value to a vector of bytes.
@@ -94,18 +87,7 @@ impl<K: TableValue, V: TableValue> Table<K, V> {
         }
     }
 
-    pub fn has(&self, key: &K) -> bool {
-        let encoded_key = key.encode();
-        let database = self.database.read().unwrap();
-
-        match database.get_cf(self.column_family, &encoded_key) {
-            Ok(Some(_)) => true,
-            Ok(None) => false,
-            _ => false,
-        }
-    }
-
-    pub fn put(&mut self, batch: &mut WriteBatch, key: &K, value: &V) -> Result<(), String> {
+    pub fn put(&self, batch: &mut WriteBatch, key: &K, value: &V) -> Result<(), String> {
         let encoded_key = key.encode();
         let encoded_value = value.encode();
 

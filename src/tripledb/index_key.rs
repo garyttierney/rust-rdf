@@ -43,3 +43,9 @@ impl TableValue for IndexKey {
         data
     }
 }
+
+impl IndexKey {
+    pub fn from(components: [u32; INDEX_KEY_LENGTH]) -> Self {
+        IndexKey { components }
+    }
+}
