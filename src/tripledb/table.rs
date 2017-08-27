@@ -5,12 +5,17 @@ use std::borrow::Borrow;
 use std::borrow::BorrowMut;
 use std::cmp::Ordering;
 use std::marker::PhantomData;
+use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::RwLock;
+use std::error::Error;
 use std::vec::Vec;
 
 use tripledb::IndexKey;
 
 use self::byteorder::ByteOrder;
-use self::rocksdb::{DB, Options, ColumnFamily, ColumnFamilyDescriptor, IteratorMode, Direction};
+use self::rocksdb::{DB, WriteBatch, Options, ColumnFamily, ColumnFamilyDescriptor, IteratorMode,
+                    Direction};
 
 pub trait TableValue: Ord {
     /// Encode this table value to a vector of bytes.
@@ -29,21 +34,24 @@ fn cmp_encoded<T: TableValue>(a: &[u8], b: &[u8]) -> Ordering {
 
 /// An iterator over a `Table` that yields `V` values until it reaches the end.
 pub struct TableIterator<V: TableValue> {
-    _phantom_val: PhantomData<V>
+    _phantom_val: PhantomData<V>,
 }
 
 pub struct TableDescriptor<K: TableValue, V: TableValue> {
     name: String,
     _phantom_val: PhantomData<V>,
-    _phantom_key: PhantomData<K>
+    _phantom_key: PhantomData<K>,
 }
 
 impl<K: TableValue, V: TableValue> TableDescriptor<K, V> {
-    pub fn new<S>(name: S) -> Self where S: Into<String> {
+    pub fn new<S>(name: S) -> Self
+    where
+        S: Into<String>,
+    {
         TableDescriptor {
             name: name.into(),
             _phantom_key: PhantomData,
-            _phantom_val: PhantomData
+            _phantom_val: PhantomData,
         }
     }
 
@@ -54,24 +62,59 @@ impl<K: TableValue, V: TableValue> TableDescriptor<K, V> {
         ColumnFamilyDescriptor::new(&self.name[..], options)
     }
 
-    pub fn open(&self, database: &mut DB) -> Table<K, V> {
-        let column_family = database.cf_handle(&self.name[..]).unwrap();
+    pub fn open(&self, db_lock: &Arc<RwLock<DB>>) -> Table<K, V> {
+        let mut database_writer = &*db_lock.write().unwrap();
+        let column_family = database_writer.cf_handle(&self.name[..]).unwrap();
 
         Table {
+            database: db_lock.clone(),
             column_family,
             _phantom_val: PhantomData,
-            _phantom_key: PhantomData
+            _phantom_key: PhantomData,
         }
     }
 }
 
 pub struct Table<K: TableValue, V: TableValue> {
-    pub column_family: ColumnFamily,
+    database: Arc<RwLock<DB>>,
+    column_family: ColumnFamily,
     _phantom_val: PhantomData<V>,
-    _phantom_key: PhantomData<K>
+    _phantom_key: PhantomData<K>,
 }
 
-impl<K: TableValue, V: TableValue> Table<K, V> {}
+impl<K: TableValue, V: TableValue> Table<K, V> {
+    pub fn get(&self, key: &K) -> Result<Option<V>, String> {
+        let encoded_key = key.encode();
+        let database = self.database.read().unwrap();
+
+        match database.get_cf(self.column_family, &encoded_key) {
+            Ok(Some(v)) => Ok(Some(TableValue::decode(&v))),
+            Ok(None) => Ok(None),
+            _ => Err(String::from("unable to lookup key")),
+        }
+    }
+
+    pub fn has(&self, key: &K) -> bool {
+        let encoded_key = key.encode();
+        let database = self.database.read().unwrap();
+
+        match database.get_cf(self.column_family, &encoded_key) {
+            Ok(Some(_)) => true,
+            Ok(None) => false,
+            _ => false,
+        }
+    }
+
+    pub fn put(&mut self, batch: &mut WriteBatch, key: &K, value: &V) -> Result<(), String> {
+        let encoded_key = key.encode();
+        let encoded_value = value.encode();
+
+        match batch.put_cf(self.column_family, &encoded_key, &encoded_value) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(String::from("Unable to store pair")),
+        }
+    }
+}
 
 impl TableValue for u32 {
     fn encode(&self) -> Vec<u8> {
