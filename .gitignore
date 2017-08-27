@@ -1,0 +1,6 @@
+/.idea/
+/target/
+/data/
+**/*.rs.bk
+*.iml
+*.swp
