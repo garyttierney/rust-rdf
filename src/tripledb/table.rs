@@ -22,12 +22,7 @@ fn cmp_encoded<T: TableValue>(a: &[u8], b: &[u8]) -> Ordering {
     let decoded_a = T::decode(a);
     let decoded_b = T::decode(b);
 
-    return decoded_a.cmp(&decoded_b);
-}
-
-/// An iterator over a `Table` that yields `V` values until it reaches the end.
-pub struct TableIterator<V: TableValue> {
-    _phantom_val: PhantomData<V>,
+    decoded_a.cmp(&decoded_b)
 }
 
 pub struct TableDescriptor<K: TableValue, V: TableValue> {
@@ -56,7 +51,7 @@ impl<K: TableValue, V: TableValue> TableDescriptor<K, V> {
     }
 
     pub fn open(&self, db_lock: &Arc<RwLock<DB>>) -> Table<K, V> {
-        let mut database_writer = &*db_lock.write().unwrap();
+        let database_writer = &*db_lock.write().unwrap();
         let column_family = database_writer.cf_handle(&self.name[..]).unwrap();
 
         Table {
@@ -103,20 +98,20 @@ impl TableValue for u32 {
         let mut data: Vec<u8> = vec![0, 0, 0, 0];
         byteorder::LittleEndian::write_u32(&mut data[0..4], *self);
 
-        return data;
+        data
     }
 
     fn decode(data: &[u8]) -> Self {
-        return byteorder::LittleEndian::read_u32(data);
+        byteorder::LittleEndian::read_u32(data)
     }
 }
 
 impl TableValue for String {
     fn encode(&self) -> Vec<u8> {
-        return self.as_bytes().to_vec();
+        self.as_bytes().to_vec()
     }
 
     fn decode(data: &[u8]) -> Self {
-        return String::from(String::from_utf8_lossy(data));
+        String::from(String::from_utf8_lossy(data))
     }
 }

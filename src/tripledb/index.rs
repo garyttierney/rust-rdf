@@ -32,26 +32,26 @@ const INDEX_TYPES: [IndexKeyType; 6] = [
 
 impl IndexKeyType {
     fn shuffle_order(&self) -> [usize; 3] {
-        match self {
-            SubjectPredicate => [S, P, O],
-            SubjectObject => [S, O, P],
-            PredicateSubject => [P, S, O],
-            PredicateObject => [P, O, S],
-            ObjectSubject => [O, S, P],
-            ObjectPredicate => [O, P, S],
+        match *self {
+            IndexKeyType::SubjectPredicate => [S, P, O],
+            IndexKeyType::SubjectObject => [S, O, P],
+            IndexKeyType::PredicateSubject => [P, S, O],
+            IndexKeyType::PredicateObject => [P, O, S],
+            IndexKeyType::ObjectSubject => [O, S, P],
+            IndexKeyType::ObjectPredicate => [O, P, S],
         }
     }
-
+ 
     pub fn id(&self) -> u8 {
-        match self {
-            SubjectPredicate => 0,
-            SubjectObject => 1,
-            PredicateSubject => 2,
-            PredicateObject => 3,
-            ObjectSubject => 4,
-            ObjectPredicate => 5,
+        match *self {
+            IndexKeyType::SubjectPredicate => 0,
+            IndexKeyType::SubjectObject => 1,
+            IndexKeyType::PredicateSubject => 2,
+            IndexKeyType::PredicateObject => 3,
+            IndexKeyType::ObjectSubject => 4,
+            IndexKeyType::ObjectPredicate => 5,
         }
-    }
+    } 
 
     pub fn values() -> [IndexKeyType; 6] {
         INDEX_TYPES
@@ -68,7 +68,7 @@ impl IndexKeyType {
 
 impl Ord for IndexKeyType {
     fn cmp(&self, other: &Self) -> Ordering {
-        return self.id().cmp(&other.id());
+        self.id().cmp(&other.id())
     }
 }
 
@@ -78,7 +78,7 @@ pub struct IndexEntry<T: Sized> {
 
 impl<T: Sized> IndexEntry<T> {
     pub fn components(&self) -> &[T] {
-        return &self.components;
+        &self.components
     }
 
     pub fn map<O: Sized, F>(&self, mut mapper: F) -> IndexEntry<O>

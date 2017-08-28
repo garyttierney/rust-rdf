@@ -1,13 +1,10 @@
 mod tripledb;
 
-use std::path::Path;
 use tripledb::StorageEngine;
-use tripledb::Table;
 use tripledb::IndexEntry;
 
 fn main() {
-    let path = Path::new("data/");
-    let mut storage_engine = StorageEngine::open(&path).unwrap();
+    let mut storage_engine = StorageEngine::open("data/").unwrap();
 
     let index_entries: Vec<IndexEntry<String>> = vec![
         IndexEntry {
@@ -15,5 +12,5 @@ fn main() {
         },
     ];
 
-    storage_engine.index(index_entries);
+    storage_engine.index(index_entries).unwrap();
 }

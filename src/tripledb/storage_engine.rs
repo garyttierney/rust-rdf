@@ -1,20 +1,17 @@
 extern crate rocksdb;
 
 use self::rocksdb::DB;
-use self::rocksdb::Error;
 use self::rocksdb::WriteBatch;
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::RwLock;
-use std::path::Path;
 
 use tripledb::IndexEntry;
 use tripledb::IndexKey;
 use tripledb::IndexKeyType;
 use tripledb::Table;
 use tripledb::TableDescriptor;
-use tripledb::TableValue;
 
 type IndexTable = Table<IndexKey, u32>;
 
@@ -32,7 +29,7 @@ const URI_TABLE_NAME: &str = "uri_table";
 impl StorageEngine {
     /// Open a new `StorageEngine` from the given path,
     /// creating the database if it doesn't already exist.
-    pub fn open(path: &Path) -> Result<StorageEngine, String> {
+    pub fn open(path: &str) -> Result<StorageEngine, String> {
         let mut options = rocksdb::Options::default();
         options.create_if_missing(true);
         options.create_missing_column_families(true);
@@ -66,13 +63,13 @@ impl StorageEngine {
             .map(|(id, ref desc)| (id, desc.open(&db_lock)))
             .collect();
 
-        return Ok(StorageEngine {
+        Ok(StorageEngine {
             database: db_lock,
             id_table,
             uri_table,
             index_tables,
             counter: 0,
-        });
+        })
     }
 
     /// Consume a collection of triples into the storage engines indexes.
@@ -90,27 +87,23 @@ impl StorageEngine {
         let index_key_types = IndexKeyType::values();
         let mut index_key_components: [u32; 3] = [0; 3];
 
-        for (type_id, table) in self.index_tables.iter() {
-            let index_key_type = &index_key_types[*type_id as usize];
+        for (type_id, table) in &self.index_tables {
+            let idx_type = &index_key_types[*type_id as usize];
 
-            for entry in encoded_entries.iter() {
-                index_key_type.shuffle_triple_into(
-                    entry.components(),
-                    &mut index_key_components[..],
-                );
+            for entry in &encoded_entries {
+                idx_type.shuffle_triple_into(entry.components(), &mut index_key_components[..]);
+                let key = IndexKey::from(index_key_components);
 
-                table.put(
-                    &mut batch,
-                    &IndexKey::from(index_key_components),
-                    &index_value,
-                );
+                if table.put(&mut batch, &key, &index_value).is_err() {
+                    return Err(String::from("couldn't add to index"));
+                }
             }
         }
 
         let database_writer = self.database.write().unwrap();
         match database_writer.write(batch) {
             Ok(_) => Ok(()),
-            Err(_) => Err(String::from("eek"))
+            Err(_) => Err(String::from("eek")),
         }
     }
 
@@ -122,10 +115,15 @@ impl StorageEngine {
         }
 
         let counter = self.counter;
-        self.id_table.put(batch, &value, &counter);
-        self.uri_table.put(batch, &counter, &value);
+        if self.id_table.put(batch, value, &counter).is_err() {
+            return Err("couldnt add to id_table");
+        }
 
+        if self.uri_table.put(batch, &counter, value).is_err() {
+            return Err("couldn't add to uri_table");
+        }
+ 
         self.counter += 1;
-        return Ok(counter);
+        Ok(counter)
     }
 }
