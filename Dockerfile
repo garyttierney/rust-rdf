@@ -21,5 +21,4 @@ RUN apk add --virtual .build-rust g++ gcc make rust cargo snappy-dev zlib-dev bz
     apk del --purge .build-rust
 
 WORKDIR /opt/tripledb
-CMD ["./tripledb"]
 ENTRYPOINT ["./tripledb"]
