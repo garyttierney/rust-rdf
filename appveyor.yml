@@ -3,6 +3,10 @@ environment:
     # This will be used as part of the zipfile name
     # TODO change the project name
     PROJECT_NAME: tripledb
+    MINGW_DIR: mingw64
+    MINGW_URL: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.2/threads-win32/seh/x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z/download
+    MINGW_ARCHIVE: x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z
+    WINDBG_DIR: '%ProgramFiles(x86)%\Windows Kits\8.1\Debuggers\x64'
   # TODO feel free to delete targets/channels you don't need
   matrix:
     # Stable channel
@@ -36,11 +40,23 @@ environment:
 # Install Rust and Cargo
 # (Based on from https://github.com/rust-lang/libc/blob/master/appveyor.yml)
 install:
+  - if not exist "%MINGW_ARCHIVE%" appveyor DownloadFile "%MINGW_URL%" -FileName "%MINGW_ARCHIVE%"
+  - 7z x -y "%MINGW_ARCHIVE%" > nul
+  - python -m ensurepip
+  - python -m pip install cpp-coveralls==0.3.11
+# CMake refuses to generate MinGW Makefiles if sh.exe is in the Path
+  - ps: Get-Command sh.exe -All | Remove-Item
   - curl -sSf -o rustup-init.exe https://win.rustup.rs
   - rustup-init.exe --default-host %TARGET% --default-toolchain %CHANNEL% -y
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  - set Path=%CD%\%MINGW_DIR%\bin;%Path%
+  - g++ --version
   - rustc -Vv
   - cargo -V
+
+cache:
+  - C:\users\appveyor\.cargo
+  - target
 
 # 'cargo test' takes care of building for us, so disable Appveyor's build stage. This prevents
 # the "directory does not contain a project or solution file" error.
