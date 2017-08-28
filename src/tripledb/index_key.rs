@@ -49,3 +49,21 @@ impl IndexKey {
         IndexKey { components }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sorts_correctly() {
+        let a_components = vec![[0, 0, 0], [0, 1, 0], [0, 1, 1]];
+        let b_components = vec![[1, 0, 0], [0, 1, 0], [0, 1, 0]];
+        let expectations = [Ordering::Less, Ordering::Equal, Ordering::Greater];
+
+        for offset in 0..3 {
+            let a = IndexKey::from(a_components[offset]);
+            let b = IndexKey::from(b_components[offset]);
+            assert_eq!(expectations[offset], a.cmp(&b));
+        }
+    }
+}
