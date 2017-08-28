@@ -1,8 +1,25 @@
+sudo: required
+services:
+  - docker
+
 language: rust
 rust:
   - stable
   - beta
   - nightly
-matrix:
-  allow_failures:
-    - rust: nightly
+
+jobs:
+  include:
+    - stage: Linting
+      rust: nightly
+      script: cargo rustc --features clippy -- -Z no-trans -Z extra-plugins=clippy
+    - stage: Publish Docker image
+      rust: stable
+      script: |
+              docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" ;
+              export TRAVIS_BRANCH TRAVIS_COMMIT TRAVIS_PULL_REQUEST TRAVIS_TAG ;
+              travis_wait 40 ./publish-docker-image.sh
+script:
+  - travis_wait 40 cargo build -q && cargo test --verbose
+
+cache: cargo
