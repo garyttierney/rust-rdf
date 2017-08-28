@@ -1,7 +1,7 @@
 FROM alpine:latest
 RUN apk update
 RUN apk add ca-certificates wget && update-ca-certificates
-RUN apk add llvm-libunwind
+RUN apk add llvm-libunwind libstdc++
 
 
 RUN mkdir -p /opt/
