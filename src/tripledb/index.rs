@@ -41,7 +41,7 @@ impl IndexKeyType {
             IndexKeyType::ObjectPredicate => [O, P, S],
         }
     }
- 
+
     pub fn id(&self) -> u8 {
         match *self {
             IndexKeyType::SubjectPredicate => 0,
@@ -51,7 +51,7 @@ impl IndexKeyType {
             IndexKeyType::ObjectSubject => 4,
             IndexKeyType::ObjectPredicate => 5,
         }
-    } 
+    }
 
     pub fn values() -> [IndexKeyType; 6] {
         INDEX_TYPES
@@ -77,10 +77,33 @@ pub struct IndexEntry<T: Sized> {
 }
 
 impl<T: Sized> IndexEntry<T> {
+    /// Create an `IndexEntry` from an array of components.
+    ///
+    /// # Arguments
+    ///
+    /// * `src_components` - An array of components that can be converted `Into` `T`.
+    pub fn from<S>(src_components: [S; 3]) -> IndexEntry<T>
+    where
+        S: Into<T> + Copy,
+    {
+        let mut components = Vec::with_capacity(3);
+        for &component in &src_components {
+            components.push(component.into());
+        }
+
+        IndexEntry { components }
+    }
+
+    /// Get the components of this `IndexEntry`.
     pub fn components(&self) -> &[T] {
         &self.components
     }
 
+    /// Use a mapping function to convert this entries components into a new `IndexEntry`.
+    ///
+    /// # Arguments
+    ///
+    /// * `mapper` - A closure that returns a value `O` for a value `T`.
     pub fn map<O: Sized, F>(&self, mut mapper: F) -> IndexEntry<O>
     where
         F: FnMut(&T) -> O,

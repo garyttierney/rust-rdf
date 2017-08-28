@@ -1,14 +1,14 @@
 extern crate rocksdb;
 extern crate byteorder;
 
+
+use self::byteorder::ByteOrder;
+use self::rocksdb::{DB, WriteBatch, Options, ColumnFamily, ColumnFamilyDescriptor};
 use std::cmp::Ordering;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::vec::Vec;
-
-use self::byteorder::ByteOrder;
-use self::rocksdb::{DB, WriteBatch, Options, ColumnFamily, ColumnFamilyDescriptor};
 
 pub trait TableValue: Ord {
     /// Encode this table value to a vector of bytes.

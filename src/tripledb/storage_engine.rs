@@ -122,7 +122,7 @@ impl StorageEngine {
         if self.uri_table.put(batch, &counter, value).is_err() {
             return Err("couldn't add to uri_table");
         }
- 
+
         self.counter += 1;
         Ok(counter)
     }
