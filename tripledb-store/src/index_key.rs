@@ -1,8 +1,8 @@
 extern crate byteorder;
 
 use self::byteorder::ByteOrder;
+use TableValue;
 use std::cmp::Ordering;
-use tripledb::TableValue;
 
 const INDEX_KEY_LENGTH: usize = 3;
 const INDEX_KEY_BYTES: usize = 12;

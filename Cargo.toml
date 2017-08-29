@@ -3,10 +3,11 @@ name = "tripledb"
 version = "0.1.0"
 authors = ["Gary Tierney <gary.tierney@gmx.com>"]
 
+[workspace]
+
 [dependencies]
-rocksdb = { git = "https://github.com/garyttierney/rust-rocksdb", branch = "feature/open-cfs-with-options"}
-byteorder = "1.1.0"
 clippy = {version = "*", optional = true}
+tripledb-store = { path = "tripledb-store" }
 
 [features]
 default = []

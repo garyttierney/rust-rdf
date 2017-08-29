@@ -1,9 +1,8 @@
 [root]
-name = "tripledb"
+name = "tripledb-store"
 version = "0.1.0"
 dependencies = [
  "byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy 0.0.154 (registry+https://github.com/rust-lang/crates.io-index)",
  "rocksdb 0.7.0 (git+https://github.com/garyttierney/rust-rocksdb?branch=feature/open-cfs-with-options)",
 ]
 
@@ -322,6 +321,14 @@ version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "serde 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "tripledb"
+version = "0.1.0"
+dependencies = [
+ "clippy 0.0.154 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tripledb-store 0.1.0",
 ]
 
 [[package]]

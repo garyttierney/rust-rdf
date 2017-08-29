@@ -1,0 +1,8 @@
+[package]
+name = "tripledb-store"
+version = "0.1.0"
+authors = ["Gary Tierney <gary.tierney@gmx.com>"]
+
+[dependencies]
+rocksdb = { git = "https://github.com/garyttierney/rust-rocksdb", branch = "feature/open-cfs-with-options"}
+byteorder = "1.1.0"

@@ -2,16 +2,15 @@ extern crate rocksdb;
 
 use self::rocksdb::DB;
 use self::rocksdb::WriteBatch;
+use IndexEntry;
+use IndexKey;
+use IndexKeyType;
+use Table;
+use TableDescriptor;
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::RwLock;
-
-use tripledb::IndexEntry;
-use tripledb::IndexKey;
-use tripledb::IndexKeyType;
-use tripledb::Table;
-use tripledb::TableDescriptor;
 
 type IndexTable = Table<IndexKey, u32>;
 

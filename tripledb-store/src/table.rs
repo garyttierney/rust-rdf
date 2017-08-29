@@ -1,7 +1,6 @@
 extern crate rocksdb;
 extern crate byteorder;
 
-
 use self::byteorder::ByteOrder;
 use self::rocksdb::{DB, WriteBatch, Options, ColumnFamily, ColumnFamilyDescriptor};
 use std::cmp::Ordering;
